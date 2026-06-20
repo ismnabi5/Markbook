@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Markbook</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#A53A2C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Markbook">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#E7EBDD;
+    --paper-dark:#D8DEC6;
+    --paper-darker:#C9D0B6;
+    --line:#B6C0A6;
+    --ink:#22303C;
+    --ink-soft:#56697A;
+    --red:#A53A2C;
+    --brass:#AD8A52;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{ font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums; }
+  button{ font-family:inherit; cursor:pointer; }
+  input{ font-family:inherit; }
+  :focus-visible{ outline:2px solid var(--red); outline-offset:2px; }
+
+  /* Header */
+  .rings{
+    height:14px;
+    background:repeating-linear-gradient(90deg, var(--brass) 0 10px, transparent 10px 34px);
+    opacity:.55;
+  }
+  header{
+    padding:22px 28px 16px;
+    border-bottom:3px double var(--ink-soft);
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+  header h1{
+    font-family:'Special Elite',monospace;
+    font-size:clamp(28px,4vw,40px);
+    letter-spacing:2px;
+    margin:0 0 4px;
+    color:var(--ink);
+  }
+  header p{
+    margin:0;
+    font-size:12px;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .header-actions{ display:flex; gap:8px; align-items:center; }
+  .btn-flat{
+    background:transparent;
+    border:1px solid var(--ink-soft);
+    color:var(--ink);
+    padding:8px 14px;
+    font-size:13px;
+    border-radius:2px;
+  }
+  .btn-flat:hover{ background:var(--paper-dark); }
+  .btn-active{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .btn-ghost{
+    background:none; border:none; color:var(--ink-soft);
+    font-size:12px; text-decoration:underline; padding:6px 4px;
+  }
+  .btn-ghost:hover{ color:var(--red); }
+
+  /* Layout */
+  .layout{
+    display:flex;
+    align-items:flex-start;
+    gap:0;
+    max-width:980px;
+    margin:0 auto;
+    padding:24px 28px 60px;
+  }
+  .tab-strip{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    width:190px;
+    flex-shrink:0;
+    padding-right:18px;
+  }
+  .tab{
+    text-align:left;
+    background:var(--paper-dark);
+    border:1px solid var(--line);
+    border-right:none;
+    color:var(--ink);
+    padding:10px 12px;
+    font-size:14px;
+    border-radius:3px 0 0 3px;
+    transition:transform .15s ease;
+  }
+  .tab:hover{ transform:translateX(-2px); }
+  .tab-active{
+    background:var(--paper);
+    border-color:var(--ink-soft);
+    font-weight:600;
+    transform:translateX(-6px);
+    box-shadow:-2px 0 0 var(--red) inset;
+  }
+  .tab-add{
+    display:flex; gap:4px; margin-top:8px;
+  }
+  .tab-add input{
+    flex:1; min-width:0; border:1px solid var(--line); background:var(--paper);
+    padding:8px 8px; font-size:13px; border-radius:2px; color:var(--ink);
+  }
+  .tab-add button{
+    border:1px solid var(--ink-soft); background:var(--paper);
+    width:32px; border-radius:2px; font-size:16px; color:var(--ink);
+  }
+  .tab-add button:hover{ background:var(--ink); color:var(--paper); }
+
+  .panel{
+    flex:1;
+    min-width:0;
+    background:var(--paper);
+    border-left:3px solid var(--red);
+    padding:6px 0 6px 22px;
+  }
+
+  .panel-head{
+    display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:12px;
+  }
+  .learner-name-row{ display:flex; flex-direction:column; gap:6px; }
+  .learner-name{
+    font-family:'Special Elite',monospace;
+    font-size:22px;
+    background:transparent; border:none; border-bottom:1px dashed var(--line);
+    padding:4px 2px; color:var(--ink); max-width:280px;
+  }
+  .learner-del{
+    align-self:flex-start; background:none; border:none; color:var(--ink-soft);
+    font-size:11px; text-decoration:underline; padding:0;
+  }
+  .learner-del:hover{ color:var(--red); }
+
+  .stamp{
+    width:96px; height:96px; border-radius:50%;
+    border:3px solid var(--red); color:var(--red);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-family:'Special Elite',monospace;
+    transform:rotate(-9deg);
+    mix-blend-mode:multiply;
+    position:relative;
+    flex-shrink:0;
+    animation:stampdown .35s ease-out;
+  }
+  .stamp::after{
+    content:''; position:absolute; inset:6px; border:1px solid var(--red); border-radius:50%; opacity:.6;
+  }
+  .stamp-pct{ font-size:20px; }
+  .stamp-level{ font-size:9px; letter-spacing:1px; margin-top:2px; }
+  @keyframes stampdown{ from{ transform:rotate(-9deg) scale(1.5); opacity:0; } to{ transform:rotate(-9deg) scale(1); opacity:1; } }
+  @media (prefers-reduced-motion: reduce){ .stamp{ animation:none; } .tab{ transition:none; } }
+
+  table{ width:100%; border-collapse:collapse; }
+  .ledger-table th{
+    text-align:left; font-size:11px; letter-spacing:1px; text-transform:uppercase;
+    color:var(--ink-soft); padding:6px 8px; border-bottom:2px solid var(--ink-soft);
+  }
+  .ledger-table td{ padding:7px 8px; border-bottom:1px solid var(--line); font-size:14px; }
+  .num{ text-align:right; }
+  .subject-row td{
+    font-weight:700; background:var(--paper-dark); border-bottom:1px solid var(--ink-soft);
+  }
+  .assess-row td:first-child{ border-bottom:none; }
+  .mark-input{
+    width:56px; text-align:right; border:1px solid transparent; background:transparent;
+    color:var(--ink); padding:3px 4px; border-radius:2px; font-family:'IBM Plex Mono',monospace;
+  }
+  .mark-input:hover, .mark-input:focus{ border-color:var(--line); background:var(--paper-dark); }
+  .row-del{
+    background:none; border:none; color:var(--ink-soft); margin-left:6px; font-size:14px;
+  }
+  .row-del:hover{ color:var(--red); }
+  .empty-row{ text-align:center; color:var(--ink-soft); padding:18px 8px; font-style:italic; }
+  .empty{ color:var(--ink-soft); font-style:italic; padding:30px 4px; }
+
+  .add-row{
+    display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; padding-top:14px;
+    border-top:1px dashed var(--line);
+  }
+  .add-row input{
+    border:1px solid var(--line); background:var(--paper); color:var(--ink);
+    padding:8px 9px; border-radius:2px; font-size:13px;
+  }
+  .add-row input[name="subject"]{ width:120px; }
+  .add-row input[name="name"]{ width:150px; flex:1; min-width:120px; }
+  .add-row input[name="mark"], .add-row input[name="total"]{ width:70px; }
+  .add-row button{
+    border:1px solid var(--ink); background:var(--ink); color:var(--paper);
+    padding:8px 14px; border-radius:2px; font-size:13px;
+  }
+  .add-row button:hover{ opacity:.85; }
+
+  .overview-table thead th{
+    text-align:left; font-size:11px; letter-spacing:1px; text-transform:uppercase;
+    color:var(--ink-soft); padding:8px; border-bottom:2px solid var(--ink-soft);
+  }
+  .overview-table td{ padding:10px 8px; border-bottom:1px solid var(--line); font-size:14px; }
+  .overview-row{ cursor:pointer; }
+  .overview-row:hover td{ background:var(--paper-dark); }
+
+  footer{
+    text-align:center; padding:18px; font-size:11px; color:var(--ink-soft);
+  }
+  .save-status-error{ color:var(--red); }
+
+  @media (max-width:680px){
+    .layout{ flex-direction:column; padding:18px 16px 50px; }
+    .tab-strip{
+      flex-direction:row; width:100%; overflow-x:auto; padding-right:0; padding-bottom:10px;
+      border-bottom:1px solid var(--line); margin-bottom:16px;
+    }
+    .tab{ border-radius:3px; border-right:1px solid var(--line); flex-shrink:0; }
+    .tab-active{ transform:none; box-shadow:0 -2px 0 var(--red) inset; }
+    .tab:hover{ transform:none; }
+    .tab-add{ flex-shrink:0; margin-top:0; width:140px; }
+    .panel{ border-left:none; border-top:3px solid var(--red); padding:14px 0 0; }
+    .panel-head{ flex-direction:column-reverse; align-items:flex-start; }
+  }
+</style>
+</head>
+<body>
+  <div class="rings"></div>
+  <header>
+    <div>
+      <h1>Markbook</h1>
+      <p>Continuous assessment ledger</p>
+    </div>
+    <div class="header-actions">
+      <button id="toggleOverviewBtn" class="btn-flat">All learners</button>
+      <button id="clearBtn" class="btn-ghost">Clear all data</button>
+    </div>
+  </header>
+
+  <div id="app">
+    <div class="layout">
+      <nav class="tab-strip" id="tabStrip"></nav>
+      <section class="panel" id="panel"></section>
+    </div>
+  </div>
+
+  <footer>Marks are saved automatically &middot; grading follows the CAPS 7-point scale &middot; <span id="saveStatus" class="save-status"></span></footer>
+
+<script>
+// When running inside Claude.ai, window.storage already exists and talks to
+// Claude's storage API. When this file is hosted as a standalone site, there
+// is no window.storage, so we provide one backed by the browser's own
+// localStorage with the same get/set/delete/list shape.
+if (typeof window.storage === 'undefined') {
+  window.storage = {
+    async get(key, shared) {
+      const raw = window.localStorage.getItem(key);
+      if (raw === null) throw new Error('Key not found');
+      return { key, value: raw, shared: !!shared };
+    },
+    async set(key, value, shared) {
+      window.localStorage.setItem(key, value);
+      return { key, value, shared: !!shared };
+    },
+    async delete(key, shared) {
+      window.localStorage.removeItem(key);
+      return { key, deleted: true, shared: !!shared };
+    },
+    async list(prefix, shared) {
+      const keys = Object.keys(window.localStorage).filter((k) => !prefix || k.startsWith(prefix));
+      return { keys, prefix, shared: !!shared };
+    }
+  };
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(() => {});
+  });
+}
+</script>
+<script>
+let learners = [];
+let activeLearnerId = null;
+let showOverview = false;
+let clearArmed = false;
+let clearTimeout = null;
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+async function loadData(attempt){
+  attempt = attempt || 0;
+  try{
+    const res = await window.storage.get('learners', false);
+    learners = (res && res.value) ? JSON.parse(res.value) : [];
+  }catch(e){
+    const msg = (e && e.message) ? e.message.toLowerCase() : '';
+    const missingKey = msg.includes('not found') || msg.includes('404');
+    if(!missingKey && attempt < 2){
+      await new Promise(r => setTimeout(r, 500));
+      return loadData(attempt + 1);
+    }
+    learners = [];
+  }
+  if(learners.length && !activeLearnerId){ activeLearnerId = learners[0].id; }
+  render();
+}
+
+let saveQueue = Promise.resolve();
+
+function setSaveStatus(state){
+  const el = document.getElementById('saveStatus');
+  if(!el) return;
+  if(state === 'saving'){ el.textContent = 'Saving…'; el.className = 'save-status'; }
+  else if(state === 'saved'){ el.textContent = 'Saved'; el.className = 'save-status'; }
+  else { el.textContent = "Not saved — changes are kept on screen, will retry"; el.className = 'save-status save-status-error'; }
+}
+
+async function attemptSave(attempt){
+  setSaveStatus('saving');
+  try{
+    const res = await window.storage.set('learners', JSON.stringify(learners), false);
+    if(!res) throw new Error('Empty response from storage');
+    setSaveStatus('saved');
+  }catch(e){
+    console.error('Save failed', e);
+    if(attempt < 2){
+      await new Promise(r => setTimeout(r, 500));
+      return attemptSave(attempt + 1);
+    }
+    setSaveStatus('error');
+  }
+}
+
+function saveData(){
+  saveQueue = saveQueue.then(() => attemptSave(0)).catch(() => {});
+  return saveQueue;
+}
+
+function addLearner(name){
+  const l = { id: uid(), name: (name || 'New learner').trim() || 'New learner', assessments: [] };
+  learners.push(l);
+  activeLearnerId = l.id;
+  showOverview = false;
+  saveData();
+  render();
+}
+
+function deleteLearner(id){
+  learners = learners.filter(l => l.id !== id);
+  if(activeLearnerId === id){
+    activeLearnerId = learners.length ? learners[0].id : null;
+  }
+  saveData();
+  render();
+}
+
+function renameLearner(id, name){
+  const l = learners.find(x => x.id === id);
+  if(l){ l.name = name.trim() || l.name; saveData(); }
+}
+
+function addAssessment(learnerId, subject, name, mark, total){
+  const l = learners.find(x => x.id === learnerId);
+  if(!l) return;
+  l.assessments.push({
+    id: uid(),
+    subject: (subject || 'General').trim() || 'General',
+    name: (name || 'Assessment').trim() || 'Assessment',
+    mark: Number(mark) || 0,
+    total: Number(total) || 0
+  });
+  saveData();
+  render();
+}
+
+function updateAssessment(learnerId, aId, field, value){
+  const l = learners.find(x => x.id === learnerId);
+  if(!l) return;
+  const a = l.assessments.find(x => x.id === aId);
+  if(!a) return;
+  if(field === 'mark' || field === 'total'){
+    a[field] = Math.max(0, Number(value) || 0);
+  } else {
+    a[field] = value;
+  }
+  saveData();
+  render();
+}
+
+function deleteAssessment(learnerId, aId){
+  const l = learners.find(x => x.id === learnerId);
+  if(!l) return;
+  l.assessments = l.assessments.filter(x => x.id !== aId);
+  saveData();
+  render();
+}
+
+function computeStats(learner){
+  const subjects = {};
+  learner.assessments.forEach(a => {
+    if(!subjects[a.subject]) subjects[a.subject] = { marks: 0, totals: 0, items: [] };
+    subjects[a.subject].marks += a.mark;
+    subjects[a.subject].totals += a.total;
+    subjects[a.subject].items.push(a);
+  });
+  const subjectPcts = Object.keys(subjects).map(name => {
+    const s = subjects[name];
+    const pct = s.totals > 0 ? (s.marks / s.totals * 100) : 0;
+    return { name, pct, marks: s.marks, totals: s.totals };
+  });
+  const overallPct = subjectPcts.length
+    ? subjectPcts.reduce((sum, s) => sum + s.pct, 0) / subjectPcts.length
+    : 0;
+  return { subjects, subjectPcts, overallPct };
+}
+
+function levelFor(pct){
+  if(pct >= 80) return { level: 7, label: 'Outstanding' };
+  if(pct >= 70) return { level: 6, label: 'Meritorious' };
+  if(pct >= 60) return { level: 5, label: 'Substantial' };
+  if(pct >= 50) return { level: 4, label: 'Adequate' };
+  if(pct >= 40) return { level: 3, label: 'Moderate' };
+  if(pct >= 30) return { level: 2, label: 'Elementary' };
+  return { level: 1, label: 'Not achieved' };
+}
+
+function esc(str){
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderTabs(){
+  const tabsEl = document.getElementById('tabStrip');
+  let html = '';
+  learners.forEach(l => {
+    const active = l.id === activeLearnerId && !showOverview;
+    html += `<button class="tab ${active ? 'tab-active' : ''}" data-action="select-learner" data-id="${l.id}">${esc(l.name)}</button>`;
+  });
+  html += `<div class="tab-add">
+    <input type="text" name="name" placeholder="Learner name" autocomplete="off" />
+    <button type="button" data-action="add-learner" title="Add learner">+</button>
+  </div>`;
+  tabsEl.innerHTML = html;
+}
+
+function renderOverviewBtn(){
+  const btn = document.getElementById('toggleOverviewBtn');
+  btn.textContent = showOverview ? 'Back to ledger' : 'All learners';
+  btn.classList.toggle('btn-active', showOverview);
+}
+
+function renderPanel(){
+  const panel = document.getElementById('panel');
+  if(showOverview){
+    if(!learners.length){
+      panel.innerHTML = `<div class="empty">No learners yet. Add one to start the ledger.</div>`;
+      return;
+    }
+    let rows = learners.map(l => {
+      const { overallPct } = computeStats(l);
+      const lvl = levelFor(overallPct);
+      const count = new Set(l.assessments.map(a => a.subject)).size;
+      return `<tr data-action="select-learner" data-id="${l.id}" class="overview-row">
+        <td>${esc(l.name)}</td>
+        <td class="num">${count}</td>
+        <td class="num">${l.assessments.length}</td>
+        <td class="num mono">${overallPct.toFixed(1)}%</td>
+        <td class="num mono">Level ${lvl.level}</td>
+      </tr>`;
+    }).join('');
+    panel.innerHTML = `
+      <table class="overview-table">
+        <thead><tr><th>Learner</th><th class="num">Subjects</th><th class="num">Marks</th><th class="num">Average</th><th class="num">CAPS level</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+    return;
+  }
+
+  const learner = learners.find(l => l.id === activeLearnerId);
+  if(!learner){
+    panel.innerHTML = `<div class="empty">No learners yet. Add one on the left to start the ledger.</div>`;
+    return;
+  }
+
+  const { subjectPcts, overallPct } = computeStats(learner);
+  const lvl = levelFor(overallPct);
+
+  let rowsHtml = '';
+  if(!learner.assessments.length){
+    rowsHtml = `<tr><td colspan="5" class="empty-row">No marks recorded yet for ${esc(learner.name)}.</td></tr>`;
+  } else {
+    subjectPcts.forEach(sp => {
+      rowsHtml += `<tr class="subject-row"><td colspan="3">${esc(sp.name)}</td><td class="num mono">${sp.marks}/${sp.totals}</td><td class="num mono">${sp.pct.toFixed(1)}%</td></tr>`;
+      learner.assessments.filter(a => a.subject === sp.name).forEach(a => {
+        const pct = a.total > 0 ? (a.mark / a.total * 100) : 0;
+        rowsHtml += `<tr class="assess-row">
+          <td></td>
+          <td>${esc(a.name)}</td>
+          <td class="num"><input type="number" min="0" class="mark-input" value="${a.mark}" data-action="update-mark" data-learner="${learner.id}" data-id="${a.id}" /></td>
+          <td class="num"><input type="number" min="0" class="mark-input" value="${a.total}" data-action="update-total" data-learner="${learner.id}" data-id="${a.id}" /></td>
+          <td class="num mono">${pct.toFixed(0)}%
+            <button class="row-del" data-action="delete-assessment" data-learner="${learner.id}" data-id="${a.id}" title="Remove">&times;</button>
+          </td>
+        </tr>`;
+      });
+    });
+  }
+
+  panel.innerHTML = `
+    <div class="panel-head">
+      <div class="learner-name-row">
+        <input type="text" class="learner-name" value="${esc(learner.name)}" data-action="rename-learner" data-id="${learner.id}" />
+        <button class="learner-del" data-action="delete-learner" data-id="${learner.id}" title="Remove learner">Remove learner</button>
+      </div>
+      <div class="stamp" key="${overallPct.toFixed(1)}">
+        <span class="stamp-pct mono">${overallPct.toFixed(0)}%</span>
+        <span class="stamp-level">LEVEL ${lvl.level}</span>
+      </div>
+    </div>
+    <table class="ledger-table">
+      <thead><tr><th>Subject</th><th>Assessment</th><th class="num">Mark</th><th class="num">/ Total</th><th class="num">%</th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+    <div class="add-row" data-learner="${learner.id}">
+      <input type="text" name="subject" placeholder="Subject" list="subjectList" autocomplete="off" />
+      <datalist id="subjectList">${subjectPcts.map(s => `<option value="${esc(s.name)}">`).join('')}</datalist>
+      <input type="text" name="name" placeholder="Assessment name" autocomplete="off" />
+      <input type="number" name="mark" placeholder="Mark" min="0" step="any" />
+      <input type="number" name="total" placeholder="Total" min="1" step="any" />
+      <button type="button" data-action="add-assessment" data-learner="${learner.id}">Add mark</button>
+    </div>
+  `;
+}
+
+function render(){
+  renderTabs();
+  renderOverviewBtn();
+  renderPanel();
+}
+
+function armClear(){
+  const btn = document.getElementById('clearBtn');
+  if(!clearArmed){
+    clearArmed = true;
+    btn.textContent = 'Click again to confirm';
+    clearTimeout = setTimeout(() => {
+      clearArmed = false;
+      btn.textContent = 'Clear all data';
+    }, 3000);
+  } else {
+    clearTimeout && clearTimeout();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadData();
+
+  document.getElementById('toggleOverviewBtn').addEventListener('click', () => {
+    showOverview = !showOverview;
+    render();
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    if(!clearArmed){
+      clearArmed = true;
+      const btn = document.getElementById('clearBtn');
+      btn.textContent = 'Click again to confirm';
+      clearTimeout = setTimeout(() => {
+        clearArmed = false;
+        btn.textContent = 'Clear all data';
+      }, 3000);
+    } else {
+      learners = [];
+      activeLearnerId = null;
+      clearArmed = false;
+      clearTimeout && clearTimeout();
+      document.getElementById('clearBtn').textContent = 'Clear all data';
+      saveData();
+      render();
+    }
+  });
+
+  const app = document.getElementById('app');
+
+  app.addEventListener('click', (e) => {
+    const target = e.target.closest('[data-action]');
+    if(!target) return;
+    const action = target.dataset.action;
+    if(action === 'select-learner'){
+      activeLearnerId = target.dataset.id;
+      showOverview = false;
+      render();
+    } else if(action === 'delete-learner'){
+      deleteLearner(target.dataset.id);
+    } else if(action === 'delete-assessment'){
+      deleteAssessment(target.dataset.learner, target.dataset.id);
+    } else if(action === 'add-learner'){
+      const container = target.closest('.tab-add');
+      const input = container.querySelector('input[name="name"]');
+      if(input.value.trim()){
+        addLearner(input.value);
+        input.value = '';
+        input.focus();
+      }
+    } else if(action === 'add-assessment'){
+      const container = target.closest('.add-row');
+      const name = container.querySelector('input[name="name"]').value;
+      const subject = container.querySelector('input[name="subject"]').value;
+      const mark = container.querySelector('input[name="mark"]').value;
+      const total = container.querySelector('input[name="total"]').value;
+      if(name.trim() && Number(total) > 0){
+        addAssessment(target.dataset.learner, subject, name, mark, total);
+      }
+    }
+  });
+
+  app.addEventListener('keydown', (e) => {
+    if(e.key !== 'Enter') return;
+    const tabAdd = e.target.closest('.tab-add');
+    if(tabAdd){
+      e.preventDefault();
+      tabAdd.querySelector('button[data-action="add-learner"]').click();
+      return;
+    }
+    const addRow = e.target.closest('.add-row');
+    if(addRow){
+      e.preventDefault();
+      addRow.querySelector('button[data-action="add-assessment"]').click();
+    }
+  });
+
+  app.addEventListener('change', (e) => {
+    const target = e.target.closest('[data-action]');
+    if(!target) return;
+    const action = target.dataset.action;
+    if(action === 'rename-learner'){
+      renameLearner(target.dataset.id, target.value);
+    } else if(action === 'update-mark'){
+      updateAssessment(target.dataset.learner, target.dataset.id, 'mark', target.value);
+    } else if(action === 'update-total'){
+      updateAssessment(target.dataset.learner, target.dataset.id, 'total', target.value);
+    }
+  });
+
+});
+
+</script>
+</body>
+</html>
